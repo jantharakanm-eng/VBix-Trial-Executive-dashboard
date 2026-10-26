@@ -26,30 +26,29 @@ export function findControl(controls, keywords, types, exclude) {
 
 const isFilled = (raw) => raw !== undefined && raw !== null && raw !== "" && raw !== "[]";
 
-// Like findControl, but when several controls match it uses the data to choose:
-// the most-filled candidate wins, ties go to the better keyword. Avoids picking an empty
-// look-alike field (e.g. a hidden "สถานะการยืม" before "สถานะทรัพย์สิน").
+// Like findControl, but when several controls match the same keyword it uses the data to
+// choose: the most-filled one wins. Keyword priority always comes first, so a fuller but
+// looser match (e.g. "มูลค่าค่าเสื่อมสะสม" for "มูลค่า") never beats "มูลค่าสุทธิ...".
 export function pickControl(controls, rows, keywords, types, exclude) {
-  const candidates = [];
-  keywords.forEach((kw) => {
+  const filled = (c) => rows.reduce((n, r) => (isFilled(r[c.controlId]) ? n + 1 : n), 0);
+  for (const kw of keywords) {
     const needle = kw.toLowerCase();
-    controls.forEach((c) => {
+    const candidates = controls.filter((c) => {
       const name = c.controlName || "";
-      if (
-        !candidates.includes(c) &&
+      return (
         (!types || types.includes(c.type)) &&
         name.toLowerCase().includes(needle) &&
         !(exclude && exclude.test(name))
-      ) {
-        candidates.push(c);
-      }
+      );
     });
-  });
-  if (candidates.length <= 1 || !rows.length) return candidates[0] || null;
-  const filled = (c) => rows.reduce((n, r) => (isFilled(r[c.controlId]) ? n + 1 : n), 0);
-  return candidates
-    .map((c, rank) => ({ c, rank, n: filled(c) }))
-    .sort((a, b) => b.n - a.n || a.rank - b.rank)[0].c;
+    if (candidates.length === 1 || (candidates.length && !rows.length)) return candidates[0];
+    if (candidates.length) {
+      return candidates
+        .map((c, rank) => ({ c, rank, n: filled(c) }))
+        .sort((a, b) => b.n - a.n || a.rank - b.rank)[0].c;
+    }
+  }
+  return null;
 }
 
 export const titleControl = (controls) => controls.find((c) => c.attribute === 1) || null;

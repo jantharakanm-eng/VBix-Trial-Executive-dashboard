@@ -6,8 +6,16 @@ import { cellLabel, cellNumber, envValue, pickControl } from "../utils/fields";
 export function detectFields(controls, rows) {
   const byId = (key) => controls.find((c) => c.controlId === envValue(key)) || null;
   const pick = (keywords, types) => pickControl(controls, rows, keywords, types);
+  // NBV may be a formula/function field whose type isn't in NUMERIC_TYPES; a specific name
+  // match of any type wins as long as its cells hold numbers.
+  const numericByName = (keywords) => {
+    const c = pick(keywords, null);
+    return c && rows.some((r) => cellNumber(r, c) !== null) ? c : null;
+  };
   return {
-    value: byId("valueField") || pick(["มูลค่าสุทธิ", "สุทธิ", "net book", "nbv", "มูลค่า"], NUMERIC_TYPES),
+    value: byId("valueField") ||
+      numericByName(["มูลค่าสุทธิตามบัญชี", "มูลค่าสุทธิ", "book val", "net book", "nbv"]) ||
+      pick(["สุทธิ", "มูลค่า"], NUMERIC_TYPES),
     status: byId("statusField") || pick(["สถานะทรัพย์สิน", "สถานะ", "status"], LABEL_TYPES),
     category: byId("categoryField") || pick(["หมวดทรัพย์สิน", "หมวด", "ประเภท", "category"], LABEL_TYPES),
     dept: byId("deptField") || pick(["หน่วยงานผู้ครอบครอง", "หน่วยงาน", "cost center", "ศูนย์ต้นทุน", "แผนก"], LABEL_TYPES)
