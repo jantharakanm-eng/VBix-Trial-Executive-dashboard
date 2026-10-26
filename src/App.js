@@ -37,7 +37,7 @@ export default function App() {
     <Page>
       <section className="hero">
         <div>
-          <div className="eyebrow">ThaiBev Asset Management · แดชบอร์ดผู้บริหาร</div>
+          <div className="eyebrow">ไทยเบฟมาร์เกตติ้ง · BU 8600</div>
           <h1>ภาพรวมทะเบียนทรัพย์สิน</h1>
           {loading ? (
             <span className="skeleton" />
