@@ -1,3 +1,5 @@
 node_modules
 .package-lock.json
 dist
+# reference screenshot with real figures — keep local
+src/image.png
